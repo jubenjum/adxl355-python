@@ -33,6 +33,11 @@ ZDATA1 = 0x10
 RANGE = 0x2C
 POWER_CTL = 0x2D
 
+AXIS_START          = XDATA3
+AXIS_LENGTH         = 9
+
+
+
 # Data Range
 RANGE_2G = 0x01
 
@@ -47,31 +52,23 @@ bus.write_byte_data(DEVICE_ADDRESS, POWER_CTL, MEASURE_MODE)
 with open(ofile, 'w') as f:
   while 1:
 
-    zdata = []
-    zdata.append(bus.read_byte_data(DEVICE_ADDRESS, ZDATA1) << 1 | READ_BIT)
-    zdata.append(bus.read_byte_data(DEVICE_ADDRESS, ZDATA2) << 1 | READ_BIT)
-    zdata.append(bus.read_byte_data(DEVICE_ADDRESS, ZDATA3) << 1 | READ_BIT)
-    zdata = (zdata[0] >> 4) + (zdata[1] << 4) + (zdata[2] << 12)
-    xdata = []
-    if zdata & 0x80000 == 0x80000:
-        zdata = ~zdata + 1
+    axisBytes = bus.read_i2c_block_data(0x1d, AXIS_START, AXIS_LENGTH)
 
-    xdata.append(bus.read_byte_data(DEVICE_ADDRESS, XDATA1) << 1 | READ_BIT)
-    xdata.append(bus.read_byte_data(DEVICE_ADDRESS, XDATA2) << 1 | READ_BIT)
-    xdata.append(bus.read_byte_data(DEVICE_ADDRESS, XDATA3) << 1 | READ_BIT)
-    xdata = (xdata[0] >> 4) + (xdata[1] << 4) + (xdata[2] << 12)
-    if xdata & 0x80000 == 0x80000:
-        xdata = ~xdata + 1
+    axisX = (axisBytes[0] << 16 | axisBytes[1] << 8 | axisBytes[2]) >> 4
+    axisY = (axisBytes[3] << 16 | axisBytes[4] << 8 | axisBytes[5]) >> 4
+    axisZ = (axisBytes[6] << 16 | axisBytes[7] << 8 | axisBytes[8]) >> 4
 
-    ydata = []
-    ydata.append(bus.read_byte_data(DEVICE_ADDRESS, YDATA1) << 1 | READ_BIT)
-    ydata.append(bus.read_byte_data(DEVICE_ADDRESS, YDATA2) << 1 | READ_BIT)
-    ydata.append(bus.read_byte_data(DEVICE_ADDRESS, YDATA3) << 1 | READ_BIT)
-    ydata = (ydata[0] >> 4) + (ydata[1] << 4) + (ydata[2] << 12)
-    if ydata & 0x80000 == 0x80000:
-        ydata = ~ydata + 1
+    if(axisX & (1 << 20 - 1)):
+        axisX = axisX - (1 << 20)
 
-    f.write("{} {} {} {}\n".format(time.perf_counter(), xdata, ydata, zdata))
+    if(axisY & (1 << 20 - 1)):
+        axisY = axisY - (1 << 20)
+
+    if(axisZ & (1 << 20 - 1)):
+        axisZ = axisZ - (1 << 20)
+
+
+    f.write("{} {} {} {}\n".format(time.perf_counter(), axisX, axisY, axisZ))
     time.sleep(0.004) # 250Hz
 
 
