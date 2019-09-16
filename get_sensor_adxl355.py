@@ -72,7 +72,7 @@ with open(ofile, 'w') as f:
         ydata = ~ydata + 1
 
     f.write("{} {} {} {}\n".format(time.perf_counter(), xdata, ydata, zdata))
-    time.sleep(0.01) # 250Hz
+    time.sleep(0.004) # 250Hz
 
 
 
