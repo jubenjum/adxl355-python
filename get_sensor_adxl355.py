@@ -1,12 +1,21 @@
 #!/usr/bin/env python3.7
 
+import signal
 import sys
 import time
+
 import smbus
 
 assert len(sys.argv) == 2, "missing output file"
 ofile = sys.argv[1]
 
+# handle ctr-c
+def signal_handler(sig, frame):
+        print('done')
+        sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
+
+sr = 100.
 channel = 1
 READ_BIT = 0x01
 WRITE_BIT = 0x00
@@ -36,8 +45,6 @@ POWER_CTL = 0x2D
 AXIS_START          = XDATA3
 AXIS_LENGTH         = 9
 
-
-
 # Data Range
 RANGE_2G = 0x01
 
@@ -52,8 +59,8 @@ bus.write_byte_data(DEVICE_ADDRESS, POWER_CTL, MEASURE_MODE)
 with open(ofile, 'w') as f:
   while 1:
 
+    initial_time = time.perf_counter()
     axisBytes = bus.read_i2c_block_data(0x1d, AXIS_START, AXIS_LENGTH)
-
     axisX = (axisBytes[0] << 16 | axisBytes[1] << 8 | axisBytes[2]) >> 4
     axisY = (axisBytes[3] << 16 | axisBytes[4] << 8 | axisBytes[5]) >> 4
     axisZ = (axisBytes[6] << 16 | axisBytes[7] << 8 | axisBytes[8]) >> 4
@@ -67,9 +74,8 @@ with open(ofile, 'w') as f:
     if(axisZ & (1 << 20 - 1)):
         axisZ = axisZ - (1 << 20)
 
+    f.write("{} {} {} {}\n".format(initial_time, axisX, axisY, axisZ))
+    ending_time = time.perf_counter()
+    sleep_time = 1.0/sr - (ending_time - initial_time) if 1.0/sr > (ending_time - initial_time) else 0.0
 
-    f.write("{} {} {} {}\n".format(time.perf_counter(), axisX, axisY, axisZ))
-    time.sleep(0.004) # 250Hz
-
-
-
+    time.sleep(sleep_time)
