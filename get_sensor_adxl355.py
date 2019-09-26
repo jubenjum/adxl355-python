@@ -16,6 +16,7 @@ def signal_handler(sig, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 sr = 100.
+
 channel = 1
 READ_BIT = 0x01
 WRITE_BIT = 0x00
