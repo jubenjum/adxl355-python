@@ -31,23 +31,11 @@ DEVICE_REG_MODE1 = 0x00
 DEVICE_REG_LEDOUT0 = 0x1d
 
 #Addresses
-XDATA3 = 0x08
-XDATA2 = 0x09
-XDATA1 = 0x0A
-YDATA3 = 0x0B
-YDATA2 = 0x0C
-YDATA1 = 0x0D
-ZDATA3 = 0x0E
-ZDATA2 = 0x0F
-ZDATA1 = 0x10
 RANGE = 0x2C
-POWER_CTL = 0x2D
-
-AXIS_START          = XDATA3
-AXIS_LENGTH         = 9
-
-# Data Range
 RANGE_2G = 0x01
+POWER_CTL = 0x2D
+AXIS_START          = 0x08
+AXIS_LENGTH         = 9
 
 # range of the accelerometric data
 bus.write_byte_data(DEVICE_ADDRESS, RANGE, RANGE_2G)
